@@ -1,13 +1,20 @@
+using System;
+using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Threading;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Common.Api.Controllers
 {
 	[ApiController,
+	 Authorize(AuthenticationSchemes = AuthSchemes),
 	 //Consumes("application/json", "application/xml"),
-	 //Produces("application/json", "application/xml"),
+	 Produces("application/json", "application/xml"),
 	 ProducesResponseType(StatusCodes.Status401Unauthorized),
 	 ProducesResponseType(StatusCodes.Status415UnsupportedMediaType),
 	 ProducesResponseType(StatusCodes.Status500InternalServerError),
@@ -16,6 +23,10 @@ namespace Common.Api.Controllers
 	 ProducesResponseType(StatusCodes.Status504GatewayTimeout)]
 	public abstract class ApiControllerBase : Controller
 	{
+		private const string AuthSchemes =
+			CookieAuthenticationDefaults.AuthenticationScheme + "," +
+			JwtBearerDefaults.AuthenticationScheme;
+
 		/// <summary>
 		/// IP Address of the remote connected party
 		/// </summary>
@@ -27,5 +38,9 @@ namespace Common.Api.Controllers
 		/// </summary>
 		protected CancellationToken CancellationToken =>
 			HttpContext.RequestAborted;
+
+		protected Guid UserId =>
+			User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier)
+				.Select(c => new Guid(c.Value)).Single();
 	}
 }

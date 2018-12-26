@@ -32,7 +32,7 @@ namespace ToDo.Api.Controllers
 		public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
 		{
 			// Read from the database and return notfound if they gave us the wrong ID
-			if (await _taskListRepository.CountAsync(tl => tl.Id == Guid.Empty && tl.Entity.Any(t => t.Id == id)) > 0)
+			if (await _taskListRepository.CountAsync(tl => tl.Id == UserId && tl.Entity.Any(t => t.Id == id)) > 0)
 				return NotFound();
 			// TODO: _messageSession.Send();
 			return NoContent();
@@ -43,7 +43,7 @@ namespace ToDo.Api.Controllers
 		public async Task<ActionResult<IEnumerable<ToDoTask>>> GetAsync()
 		{
 			var list = await _taskListRepository
-				.FirstOrDefaultAsync(tl => tl.Id == Guid.Empty) ?? new TaskList();
+				.FirstOrDefaultAsync(tl => tl.Id == UserId) ?? new TaskList();
 			return Ok(list.Entity);
 		}
 
