@@ -8,6 +8,7 @@ using Common.Database;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -36,9 +37,22 @@ namespace ToDo.WebHost
 		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
 		public IServiceProvider ConfigureServices(IServiceCollection services)
 		{
+
 			services
-				.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-				.AddCookie(o => {
+				.AddAuthentication(
+					/*o =>
+					{
+						o.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+						o.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+					}*/)
+				.AddCookie(o =>
+				{
+					o.Events.OnRedirectToAccessDenied = c =>
+					{
+						// Redirect them to a 403 instead since this is API stuff
+						c.Response.StatusCode = StatusCodes.Status403Forbidden;
+						return Task.CompletedTask;
+					};
 					o.Events.OnRedirectToLogin = c =>
 					{
 						// Redirect them to a 401 instead since this is API stuff
@@ -48,7 +62,6 @@ namespace ToDo.WebHost
 				})
 				.AddJwtBearer();
 			services
-				.AddAuthorization()
 				.AddMongoServices()
 				.Configure<MongoSettings>(_config.GetSection("Mongo"))
 				.AddAutoMapper(c =>
@@ -56,16 +69,20 @@ namespace ToDo.WebHost
 					c.AddProfile<SharedMappingProfile>();
 					c.AddProfile<ToDoTaskMappingProfile>();
 				});
-			services.AddMvcCore()
+
+			services
+				.AddMvcCore()
 				.AddApiExplorer()
+				.AddAuthorization()
 				.AddJsonFormatters()
-				.SetCompatibilityVersion(CompatibilityVersion.Latest)
 				.AddFluentValidation(fv =>
 				{
 					// TODO: Wire up Assembly Reflection
 					fv.RegisterValidatorsFromAssemblyContaining<
 						ToDoTaskPutValidator>();
-				});
+				})
+				.SetCompatibilityVersion(CompatibilityVersion.Latest);
+
 			return services.BuildServiceProvider();
 		}
 
