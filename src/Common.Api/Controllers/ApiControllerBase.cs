@@ -23,7 +23,7 @@ namespace Common.Api.Controllers
 	 ProducesResponseType(StatusCodes.Status504GatewayTimeout)]
 	public abstract class ApiControllerBase : Controller
 	{
-		private const string AuthSchemes =
+		protected const string AuthSchemes =
 			CookieAuthenticationDefaults.AuthenticationScheme + "," +
 			JwtBearerDefaults.AuthenticationScheme;
 

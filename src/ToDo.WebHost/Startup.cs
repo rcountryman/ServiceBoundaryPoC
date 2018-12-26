@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using AutoMapper;
 using Common.Api.Mappings;
 using Common.Database;
@@ -36,11 +37,19 @@ namespace ToDo.WebHost
 		public IServiceProvider ConfigureServices(IServiceCollection services)
 		{
 			services
-				.AddAuthentication()
-				.AddCookie()
+				.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+				.AddCookie(o => {
+					o.Events.OnRedirectToLogin = c =>
+					{
+						// Redirect them to a 401 instead since this is API stuff
+						c.Response.StatusCode = StatusCodes.Status401Unauthorized;
+						return Task.CompletedTask;
+					};
+				})
 				.AddJwtBearer();
-
-			services.AddMongoServices()
+			services
+				.AddAuthorization()
+				.AddMongoServices()
 				.Configure<MongoSettings>(_config.GetSection("Mongo"))
 				.AddAutoMapper(c =>
 				{
@@ -66,48 +75,46 @@ namespace ToDo.WebHost
 			if (_env.IsDevelopment())
 				app.UseDeveloperExceptionPage();
 			app
-				.UseStaticFiles(new StaticFileOptions
-				{
-					OnPrepareResponse = async c =>
-					{
-						// If the cookie is already set then return
-						if (c.Context.User.Identity.IsAuthenticated) return;
-						await c.Context.SignInAsync(
-							CookieAuthenticationDefaults.AuthenticationScheme,
-							new ClaimsPrincipal(new ClaimsIdentity(
-								new List<Claim>
-								{
-									new Claim(ClaimTypes.Anonymous, "true"),
-									new Claim(ClaimTypes.IsPersistent, "true"),
-									new Claim(ClaimTypes.NameIdentifier, SequentialGuidGenerator.Instance.NewGuid().ToString())
-								},
-								CookieAuthenticationDefaults
-									.AuthenticationScheme)),
-							new AuthenticationProperties
-							{
-								ExpiresUtc = DateTimeOffset.MaxValue,
-								IsPersistent = true,
-								IssuedUtc = DateTimeOffset.UtcNow
-							});
-					}
-				})
 				.UseAuthentication()
 				.UseMvc()
-				.UseSpa(c =>
+				.UseSpa(spa =>
 				{
-					c.Options.DefaultPageStaticFileOptions =
+					spa.Options.DefaultPageStaticFileOptions =
 						new StaticFileOptions
 						{
-							OnPrepareResponse = context =>
+							OnPrepareResponse = async c =>
 							{
-								context.Context.Response.GetTypedHeaders()
-										.CacheControl =
-									new CacheControlHeaderValue
+								c.Context.Response.GetTypedHeaders()
+									.CacheControl = new CacheControlHeaderValue
 									{
 										MustRevalidate = true,
 										NoCache = true,
 										NoStore = true
 									};
+								if (c.Context.User.Identity.IsAuthenticated)
+									return;
+								await c.Context.SignInAsync(
+									CookieAuthenticationDefaults
+										.AuthenticationScheme,
+									new ClaimsPrincipal(new ClaimsIdentity(
+										new List<Claim>
+										{
+											new Claim(ClaimTypes.Anonymous,
+												"true"),
+											new Claim(ClaimTypes.IsPersistent,
+												"true"),
+											new Claim(ClaimTypes.NameIdentifier,
+												SequentialGuidGenerator.Instance
+													.NewGuid().ToString())
+										},
+										CookieAuthenticationDefaults
+											.AuthenticationScheme)),
+									new AuthenticationProperties
+									{
+										ExpiresUtc = DateTimeOffset.MaxValue,
+										IsPersistent = true,
+										IssuedUtc = DateTimeOffset.UtcNow
+									});
 							}
 						};
 				});

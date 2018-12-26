@@ -54,7 +54,7 @@ namespace ToDo.Api.Controllers
 		{
 			// Read from the database and return notfound if they gave us the wrong ID
 			var list = await _taskListRepository
-				.FirstOrDefaultAsync(tl => tl.Id == Guid.Empty && tl.Entity.Any(t => t.Id == id));
+				.FirstOrDefaultAsync(tl => tl.Id == UserId && tl.Entity.Any(t => t.Id == id));
 			if (list == null)
 				return NotFound();
 			return Ok(list.Entity.Single(t => t.Id == id));
@@ -68,7 +68,7 @@ namespace ToDo.Api.Controllers
 			await Task.Delay(0);
 			var entity = _mapper.Map<ToDoTask>(request);
 			// TODO: _messageSession.Send();
-			return CreatedAtAction("GetTaskById", new { entity.Id }, entity);
+			return CreatedAtRoute("GetTaskById", new {entity.Id}, entity);
 		}
 
 		[HttpPut("{id:guid}"),
@@ -78,26 +78,26 @@ namespace ToDo.Api.Controllers
 		public async Task<ActionResult<ToDoTask>> PutAsync([FromRoute] Guid id, [FromBody] ToDoTaskPut request)
 		{
 			// Read from the database and return notfound if they gave us the wrong ID
-			var list = await _taskListRepository.FirstOrDefaultAsync(tl => tl.Id == Guid.Empty && tl.Entity.Any(t => t.Id == id));
+			var list = await _taskListRepository.FirstOrDefaultAsync(tl => tl.Id == UserId && tl.Entity.Any(t => t.Id == id));
 			if (list == null)
 				return NotFound();
 			var data = list.Entity.Single(t => t.Id == id);
 			// If we've gotten here then we have a valid object map to strongly typed version
 			var entity = _mapper.Map<ToDoTask>(request, id);
+			var compositeTask = new ToDoTask
+			{
+				Id = id,
+				Completed = entity.Completed.HasValue
+					? entity.Completed.Value ? true :
+					default(bool?)
+					: data.Completed,
+				Description = entity.Description ?? data.Description,
+				DueDate = entity.DueDate ?? data.DueDate
+			};
 			// TODO: _messageSession.Send();
 
 			// Return back composite graph of what's in the DB & what was sent in
-			return Ok(new ToDoTask
-			{
-				Id = id,
-				Completed = entity.Completed.HasValue ?
-					entity.Completed.Value ?
-						true :
-						default(bool?) :
-					data.Completed,
-				Description = entity.Description ?? data.Description,
-				DueDate = entity.DueDate ?? data.DueDate
-			});
+			return Ok(compositeTask);
 		}
 	}
 }
