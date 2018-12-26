@@ -1,0 +1,41 @@
+#Visual Studio Cruft
+.vs/
+
+#JetBrains Cruft
+.idea/
+
+#NServiceBus Cruft
+.learningtransport/
+
+#Temporary Objects
+obj/
+
+#Binary Output
+bin/
+
+#Client build output
+build/
+
+#NPM horribad lock file
+# package-lock.json
+
+#Webpack Build Output
+wwwroot/
+
+#Node Modules
+node_modules/
+
+#JEST Code Coverage
+coverage/
+
+# misc
+*.user
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
