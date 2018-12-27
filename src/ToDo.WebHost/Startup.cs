@@ -39,12 +39,7 @@ namespace ToDo.WebHost
 		{
 
 			services
-				.AddAuthentication(
-					/*o =>
-					{
-						o.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-						o.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-					}*/)
+				.AddAuthentication()
 				.AddCookie(o =>
 				{
 					o.Events.OnRedirectToAccessDenied = c =>
@@ -73,7 +68,7 @@ namespace ToDo.WebHost
 			services
 				.AddMvcCore()
 				.AddApiExplorer()
-				.AddAuthorization()
+				.AddAuthorization() // Must be here under MVC
 				.AddJsonFormatters()
 				.AddFluentValidation(fv =>
 				{
@@ -92,7 +87,6 @@ namespace ToDo.WebHost
 			if (_env.IsDevelopment())
 				app.UseDeveloperExceptionPage();
 			app
-				.UseAuthentication()
 				.UseMvc()
 				.UseSpa(spa =>
 				{
