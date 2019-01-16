@@ -1,6 +1,5 @@
 using System;
-using AutoMapper;
-using Common.Api.Mappings;
+using Common.Domain;
 using NodaTime;
 using NodaTime.Extensions;
 using SequentialGuid;
@@ -9,125 +8,125 @@ using Xunit;
 
 namespace ToDo.Api.Tests
 {
-	// Required to get XUnit to drop in valid fixture
-	[Collection(AutoMapperFixture.CollectionName)]
-	public class ToDoMapperTests
+	public class ToDoMapperTests : AutoMapperTestBase
 	{
-		private readonly IMapper _mapper;
-
-		public ToDoMapperTests(AutoMapperFixture fixture) =>
-			_mapper = fixture.Mapper;
+		public ToDoMapperTests(AutoMapperFixture fixture) : base(fixture)
+		{
+		}
 
 		[Fact]
 		private void TestToDoPostMappingComplete()
 		{
 			// Arrange
-			var source = new ToDoTaskPost
+			var expected = new ToDoTaskPost
 			{
 				Description = "My ToDo Update",
 				DueDate = DateTime.Today.ToString("yyyy-MM-dd")
 			};
 			// Act
-			var destination = _mapper.Map<ToDoTask>(source);
+			var actual = Mapper.Map<ToDoTask>(expected);
 			// Assert
-			Assert.True(destination.Id.ToDateTime().HasValue);
-			Assert.Null(destination.Completed);
-			Assert.Equal(source.Description, destination.Description);
+			Assert.True(actual.Id.ToDateTime().HasValue);
+			Assert.Null(actual.Completed);
+			Assert.Equal(expected.Description, actual.Description);
 			Assert.Equal(
 				SystemClock.Instance.InTzdbSystemDefaultZone().GetCurrentDate(),
-				destination.DueDate);
+				actual.DueDate);
 		}
 
 		[Fact]
 		private void TestToDoPostMappingEmpty()
 		{
-			// Arrange
-			var source = new ToDoTaskPost();
-			// Act
-			var destination = _mapper.Map<ToDoTask>(source);
+			// Arrange & Act
+			var actual = Mapper.Map<ToDoTask>(new ToDoTaskPost());
 			// Assert
-			Assert.True(destination.Id.ToDateTime().HasValue);
-			Assert.Null(destination.Completed);
-			Assert.Null(destination.Description);
-			Assert.Null(destination.DueDate);
+			Assert.True(actual.Id.ToDateTime().HasValue);
+			Assert.Null(actual.Completed);
+			Assert.Null(actual.Description);
+			Assert.Null(actual.DueDate);
 		}
 
 		[Fact]
 		private void TestToDoPostMappingJunk()
 		{
 			// Arrange
-			var source = new ToDoTaskPost
+			var expected = new ToDoTaskPost
 			{
 				Description = "Hello World!",
 				DueDate = "Hello World!"
 			};
 			// Act
-			var destination = _mapper.Map<ToDoTask>(source);
+			var actual = Mapper.Map<ToDoTask>(expected);
 			// Assert
-			Assert.True(destination.Id.ToDateTime().HasValue);
-			Assert.Null(destination.Completed);
-			Assert.Equal(source.Description, destination.Description);
-			Assert.Null(destination.DueDate);
+			Assert.True(actual.Id.ToDateTime().HasValue);
+			Assert.Null(actual.Completed);
+			Assert.Equal(expected.Description, actual.Description);
+			Assert.Null(actual.DueDate);
 		}
 
 		[Fact]
 		private void TestToDoPutMappingComplete()
 		{
 			// Arrange
-			var timeStamp = DateTime.UtcNow;
-			var id = SequentialGuidGenerator.Instance.NewGuid(timeStamp);
-			var source = new ToDoTaskPut
+			var expectedTimeStamp = DateTime.UtcNow;
+			var expectedId =
+				SequentialGuidGenerator.Instance.NewGuid(expectedTimeStamp);
+			var expected = new ToDoTaskPut
 			{
 				Completed = "true",
 				Description = "My ToDo Update",
 				DueDate = DateTime.Today.ToString("yyyy-MM-dd")
 			};
 			// Act
-			var destination = _mapper.Map<ToDoTask>(source, id);
+			var actual = Mapper.Map<ToDoTask>(expectedId, expected);
 			// Assert
-			Assert.Equal(timeStamp, destination.Id.ToDateTime());
-			Assert.True(destination.Completed);
-			Assert.Equal(source.Description, destination.Description);
+			Assert.Equal(expectedId, actual.Id);
+			Assert.Equal(expectedTimeStamp, actual.Id.ToDateTime());
+			Assert.True(actual.Completed);
+			Assert.Equal(expected.Description, actual.Description);
 			Assert.Equal(
 				SystemClock.Instance.InTzdbSystemDefaultZone().GetCurrentDate(),
-				destination.DueDate);
+				actual.DueDate);
 		}
 
 		[Fact]
 		private void TestToDoPutMappingEmpty()
 		{
 			// Arrange
-			var timeStamp = DateTime.UtcNow;
-			var id = SequentialGuidGenerator.Instance.NewGuid(timeStamp);
-			var source = new ToDoTaskPut();
+			var expectedTimeStamp = DateTime.UtcNow;
+			var expectedId =
+				SequentialGuidGenerator.Instance.NewGuid(expectedTimeStamp);
 			// Act
-			var destination = _mapper.Map<ToDoTask>(source, id);
+			var actual = Mapper.Map<ToDoTask>(expectedId, new ToDoTaskPut());
 			// Assert
-			Assert.Equal(timeStamp, destination.Id.ToDateTime());
-			Assert.Null(destination.Completed);
-			Assert.Null(destination.Description);
-			Assert.Null(destination.DueDate);
+			Assert.Equal(expectedId, actual.Id);
+			Assert.Equal(expectedTimeStamp, actual.Id.ToDateTime());
+			Assert.Null(actual.Completed);
+			Assert.Null(actual.Description);
+			Assert.Null(actual.DueDate);
 		}
 
 		[Fact]
 		private void TestToDoPutMappingJunk()
 		{
 			// Arrange
-			var timeStamp = DateTime.UtcNow;
-			var id = SequentialGuidGenerator.Instance.NewGuid(timeStamp);
-			var source = new ToDoTaskPut
+			var expectedTimeStamp = DateTime.UtcNow;
+			var expectedId =
+				SequentialGuidGenerator.Instance.NewGuid(expectedTimeStamp);
+			var expected = new ToDoTaskPut
 			{
 				Completed = "Hello World!",
 				Description = "Hello World!",
 				DueDate = "Hello World!"
 			};
 			// Act
-			var destination = _mapper.Map<ToDoTask>(source, id);
+			var actual = Mapper.Map<ToDoTask>(expectedId, expected);
 			// Assert
-			Assert.Equal(timeStamp, destination.Id.ToDateTime());
-			Assert.Null(destination.Completed);
-			Assert.Equal(source.Description, destination.Description);
-			Assert.Null(destination.DueDate);
+			Assert.Equal(expectedId, actual.Id);
+			Assert.Equal(expectedTimeStamp, actual.Id.ToDateTime());
+			Assert.Null(actual.Completed);
+			Assert.Equal(expected.Description, actual.Description);
+			Assert.Null(actual.DueDate);
 		}
 	}
 }

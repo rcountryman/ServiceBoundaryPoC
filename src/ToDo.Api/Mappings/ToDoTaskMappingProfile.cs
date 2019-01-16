@@ -1,5 +1,6 @@
 using System;
 using AutoMapper;
+using Common.Domain;
 using SequentialGuid;
 using ToDo.Api.Models;
 
@@ -12,14 +13,19 @@ namespace ToDo.Api.Mappings
 			// POST should generate an Id
 			// POST should ignore completed
 			CreateMap<ToDoTaskPost, ToDoTask>()
-				.BeforeMap((s, d) => d.Id = SequentialGuidGenerator.Instance.NewGuid())
-				.ForMember(d => d.Id, o => o.Ignore())
-				.ForMember(d => d.Completed, o => o.Ignore());
+				.BeforeMap((s, d) =>
+					d.Id = SequentialGuidGenerator.Instance.NewGuid())
+				.IgnoreMember(d => d.Id)
+				.IgnoreMember(d => d.Completed);
 
-			// PUT shoud pull the Id from the Items dictionary
+			// Create a map from Guid to the id property
+			CreateMap<Guid, ToDoTask>()
+				.MapFrom(d => d.Id, s => s)
+				.IgnoreAllOtherMembers();
+
+			// Direct copy fields except ignore the ID which is in a separate map
 			CreateMap<ToDoTaskPut, ToDoTask>()
-				.BeforeMap((s, d, o) => d.Id = new Guid(o.Items["id"].ToString()))
-				.ForMember(d => d.Id, o => o.Ignore());
+				.IgnoreMember(d => d.Id);
 		}
 	}
 }

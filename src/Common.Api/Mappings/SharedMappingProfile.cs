@@ -12,7 +12,7 @@ namespace Common.Api.Mappings
 			CreateMap<string, bool>()
 				.ConvertUsing(s => bool.Parse(s));
 
-			// Gracefully rturn back null on failed parses
+			// Gracefully return back null on failed parses
 			CreateMap<string, bool?>()
 				.ConvertUsing(s => ConvertToBool(s));
 

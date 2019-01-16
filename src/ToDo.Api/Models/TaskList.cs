@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Common.Database;
+using Common.Domain;
 
 namespace ToDo.Api.Models
 {

@@ -4,9 +4,9 @@ using NodaTime;
 using NodaTime.TimeZones;
 using SequentialGuid;
 
-namespace Common.Database
+namespace Common.Domain
 {
-	public abstract class AuditEntityBase<T>
+	public class AuditEntityBase<T>
 	{
 		private Guid _id;
 		private DateTimeZone _timeZone;
@@ -17,7 +17,11 @@ namespace Common.Database
 			set
 			{
 				_id = value;
-				Timestamp = _id.ToDateTime();
+				var time = _id.ToDateTime();
+
+				Timestamp = time.HasValue
+					? Instant.FromDateTimeUtc(time.Value)
+					: default(Instant?);
 				SetLocalTime();
 			}
 		}
@@ -45,16 +49,15 @@ namespace Common.Database
 			}
 		}
 
-		public DateTime? Timestamp { get; private set; }
+		public Instant? Timestamp { get; private set; }
 
-		public DateTimeOffset? LocalTime { get; private set; }
+		public ZonedDateTime? LocalTime { get; private set; }
 
 		public T Entity { get; set; }
 
 		private void SetLocalTime() => LocalTime =
 			!Timestamp.HasValue || _timeZone == default
-				? default(DateTimeOffset?)
-				: new ZonedDateTime(Instant.FromDateTimeUtc(Timestamp.Value),
-					_timeZone).ToDateTimeOffset();
+				? default(ZonedDateTime?)
+				: new ZonedDateTime(Timestamp.Value, _timeZone);
 	}
 }

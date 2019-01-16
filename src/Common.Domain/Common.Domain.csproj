@@ -8,8 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Common.Api\Common.Api.csproj" />
-    <ProjectReference Include="..\Common.Database\Common.Database.csproj" />
+    <PackageReference Include="AutoMapper" Version="8.0.0" />
+    <PackageReference Include="NodaTime" Version="2.4.4" />
+    <PackageReference Include="SequentialGuid" Version="2.4.0" />
   </ItemGroup>
 
 </Project>

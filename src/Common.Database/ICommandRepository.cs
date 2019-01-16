@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Common.Domain;
 
 namespace Common.Database
 {
